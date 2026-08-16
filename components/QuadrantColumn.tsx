@@ -58,10 +58,10 @@ export function QuadrantColumn({
       />
       <div className="flex flex-1 flex-col bg-white">
         <header
-          className="flex items-center gap-2.5 px-5 py-3 text-white"
+          className="flex min-h-[50px] items-center gap-2.5 px-5 py-3 text-white"
           style={{ backgroundColor: meta.accent }}
         >
-          <h2 className="font-display text-[15px] font-bold leading-tight">
+          <h2 className="font-display text-[18px] font-bold leading-[1.2]">
             {meta.title}
           </h2>
           <span
