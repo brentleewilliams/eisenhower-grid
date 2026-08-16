@@ -69,3 +69,21 @@ passes through untouched and serves the app at its own root.
   they're absent (e.g. a fresh clone with no `.env.local` yet). These vars
   also need to be set in Vercel's Environment Variables for production,
   and any change there requires a redeploy to take effect.
+
+## Chat assistant
+
+- Model: OpenAI `gpt-5.6-luna` via the Responses API (`app/api/chat/route.ts`,
+  server-only — reads `OPENAI_API_KEY`, never exposed to the client).
+- `lib/useChat.ts` owns the client-side loop: it keeps the full Responses-API
+  item history in a ref, posts it to `/api/chat` alongside the current
+  tasks/goals as JSON context, and — for any `function_call` items in the
+  response — executes the matching `useTasks`/`useGoals` action locally,
+  appends a `function_call_output`, and re-posts until the model stops
+  calling tools. Task/goal mutations from chat go through the same hooks as
+  the rest of the UI, so they sync identically (`localStorage` or Firestore).
+- `reasoning.effort` is set to `high` in the route — at `medium`, Luna (the
+  cheapest/fastest GPT-5.6 tier) was observed hallucinating duplicate tasks
+  that didn't exist in the state it was given, ignoring corrections. `high`
+  plus an explicit "the state JSON is the only source of truth, don't count
+  mentions in the transcript" instruction in the system prompt resolved it.
+  If tool-calling accuracy regresses again, that's the first thing to check.
