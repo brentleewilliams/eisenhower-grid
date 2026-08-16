@@ -8,6 +8,38 @@ export interface Task {
   createdAt: number;
 }
 
+export type GoalPeriod = "weekly" | "monthly";
+
+export interface Goal {
+  id: string;
+  title: string;
+  period: GoalPeriod;
+  completed: boolean;
+  createdAt: number;
+}
+
+export interface GoalPeriodMeta {
+  id: GoalPeriod;
+  title: string;
+  placeholder: string;
+  emptyLabel: string;
+}
+
+export const GOAL_PERIODS: GoalPeriodMeta[] = [
+  {
+    id: "weekly",
+    title: "Weekly goals",
+    placeholder: "Add a goal for this week",
+    emptyLabel: "No weekly goals yet.",
+  },
+  {
+    id: "monthly",
+    title: "Monthly goals",
+    placeholder: "Add a goal for this month",
+    emptyLabel: "No monthly goals yet.",
+  },
+];
+
 export interface QuadrantMeta {
   id: QuadrantId;
   title: string;

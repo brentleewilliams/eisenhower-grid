@@ -3,6 +3,7 @@
 import { useRef } from "react";
 import { QUADRANTS } from "@/lib/types";
 import { useTasks } from "@/lib/useTasks";
+import { GoalsPanel } from "./GoalsPanel";
 import { QuadrantColumn } from "./QuadrantColumn";
 
 export function Matrix() {
@@ -19,26 +20,29 @@ export function Matrix() {
   }
 
   return (
-    <div className="grid flex-1 grid-cols-1 gap-3 p-4 sm:grid-cols-2 sm:gap-[18px] sm:p-6">
-      {QUADRANTS.map((meta) => (
-        <QuadrantColumn
-          key={meta.id}
-          meta={meta}
-          tasks={tasks.filter((t) => t.quadrant === meta.id)}
-          onAdd={(title) => addTask(meta.id, title)}
-          onToggle={toggleTask}
-          onDelete={deleteTask}
-          onDragStart={(id) => {
-            draggedId.current = id;
-          }}
-          onDrop={() => {
-            if (draggedId.current) {
-              moveTask(draggedId.current, meta.id);
-              draggedId.current = null;
-            }
-          }}
-        />
-      ))}
+    <div className="flex flex-1 flex-col gap-3 p-4 sm:flex-row sm:gap-[18px] sm:p-6">
+      <GoalsPanel />
+      <div className="grid flex-1 grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-[18px]">
+        {QUADRANTS.map((meta) => (
+          <QuadrantColumn
+            key={meta.id}
+            meta={meta}
+            tasks={tasks.filter((t) => t.quadrant === meta.id)}
+            onAdd={(title) => addTask(meta.id, title)}
+            onToggle={toggleTask}
+            onDelete={deleteTask}
+            onDragStart={(id) => {
+              draggedId.current = id;
+            }}
+            onDrop={() => {
+              if (draggedId.current) {
+                moveTask(draggedId.current, meta.id);
+                draggedId.current = null;
+              }
+            }}
+          />
+        ))}
+      </div>
     </div>
   );
 }

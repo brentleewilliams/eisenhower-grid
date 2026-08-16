@@ -12,8 +12,9 @@ prioritization tool. Sort tasks into four quadrants by urgency and importance:
 
 - Add, complete, and delete tasks per quadrant
 - Drag and drop tasks between quadrants
-- Sign in with Google to sync tasks across devices (optional — works fully
-  offline with `localStorage` if you never sign in)
+- Weekly and monthly goals panel alongside the matrix
+- Sign in with Google to sync tasks and goals across devices (optional —
+  works fully offline with `localStorage` if you never sign in)
 
 ## Stack
 
@@ -47,13 +48,13 @@ The app works fully without this — it just won't sync across devices.
 7. If deploying, add the same env vars in your host's project settings
    (e.g. Vercel → Project → Settings → Environment Variables) and redeploy.
 
-Each signed-in user's tasks live in a single Firestore document at
-`users/{uid}`. On first sign-in on a device, any local tasks are copied up
-to Firestore as the starting point; after that, Firestore is the source of
-truth.
+Each signed-in user's tasks and goals live in a single Firestore document at
+`users/{uid}` (`tasks` and `goals` fields). On first sign-in on a device, any
+local data is copied up to Firestore as the starting point; after that,
+Firestore is the source of truth.
 
 ## Roadmap
 
-Out of scope for now, potential follow-ups: Goals view, Board (Kanban) view,
-Calendar view, a real Settings feature (currently just a disabled nav item),
-and other features from the original product's paid tiers.
+Out of scope for now, potential follow-ups: quarterly goals, Board (Kanban)
+view, Calendar view, a real Settings feature (currently just a disabled nav
+item), and other features from the original product's paid tiers.
