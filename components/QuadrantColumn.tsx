@@ -36,7 +36,7 @@ export function QuadrantColumn({
   }
 
   return (
-    <div
+    <section
       onDragOver={(e) => {
         e.preventDefault();
         setIsDragOver(true);
@@ -46,50 +46,65 @@ export function QuadrantColumn({
         setIsDragOver(false);
         onDrop();
       }}
-      className={
-        "flex flex-col rounded-xl border overflow-hidden transition-colors" +
-        (isDragOver ? " ring-2 ring-offset-2" : "")
-      }
+      className="relative flex min-h-[280px] flex-col overflow-hidden rounded-lg border border-black/[.06] bg-white pl-1 shadow-sm transition-shadow"
       style={{
-        borderColor: meta.accent + "33",
-        backgroundColor: meta.accentSoft,
+        boxShadow: isDragOver ? `0 0 0 2px ${meta.accent}` : undefined,
       }}
     >
       <div
-        className="flex items-center justify-between px-4 py-3 text-white"
+        aria-hidden
+        className="absolute inset-y-0 left-0 w-1"
         style={{ backgroundColor: meta.accent }}
-      >
-        <div>
-          <h2 className="font-semibold leading-tight">{meta.title}</h2>
-          <p className="text-xs text-white/80">{meta.subtitle}</p>
-        </div>
-        <span className="rounded-full bg-white/20 px-2 py-0.5 text-xs font-medium">
-          {active.length}
-        </span>
-      </div>
+      />
+      <div className="flex flex-1 flex-col bg-white">
+        <header
+          className="flex items-center gap-2.5 px-5 py-3 text-white"
+          style={{ backgroundColor: meta.accent }}
+        >
+          <h2 className="font-display text-[15px] font-bold leading-tight">
+            {meta.title}
+          </h2>
+          <span
+            className="flex h-5 min-w-[22px] items-center justify-center rounded-full bg-white px-1.5 font-ui text-xs font-bold"
+            style={{ color: meta.accent }}
+          >
+            {active.length}
+          </span>
+          <span className="font-ui ml-auto text-xs text-white/80">
+            {meta.subtitle}
+          </span>
+        </header>
 
-      <div className="flex flex-col gap-2 p-3 flex-1">
-        <input
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") submit();
-          }}
-          placeholder={meta.placeholder}
-          className="w-full rounded-md border border-black/10 bg-white px-3 py-2 text-sm placeholder:text-black/40 focus:outline-none focus:ring-2"
-          style={{ outlineColor: meta.accent }}
-        />
+        <label className="flex items-center gap-2.5 border-b border-black/[.06] px-5 py-2.5 text-sm text-black/45">
+          <span
+            className="flex size-[18px] shrink-0 items-center justify-center rounded-md border-[1.5px] border-dashed text-[11px] leading-none"
+            style={{ borderColor: meta.ink, color: meta.ink }}
+            aria-hidden
+          >
+            +
+          </span>
+          <input
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") submit();
+            }}
+            placeholder={meta.placeholder}
+            className="font-ui w-full bg-transparent placeholder:text-black/40 focus:outline-none"
+          />
+        </label>
 
         {active.length === 0 ? (
-          <p className="py-6 text-center text-xs italic text-black/40">
+          <p className="font-ui flex flex-1 items-center justify-center py-8 text-center text-xs italic text-black/40">
             {meta.emptyLabel}
           </p>
         ) : (
-          <ul className="flex flex-col gap-2">
+          <ul>
             {active.map((task) => (
               <TaskItem
                 key={task.id}
                 task={task}
+                accent={meta.ink}
                 onToggle={onToggle}
                 onDelete={onDelete}
                 onDragStart={onDragStart}
@@ -99,21 +114,22 @@ export function QuadrantColumn({
         )}
 
         {completed.length > 0 && (
-          <div className="mt-1">
+          <div className="font-ui px-5 py-2">
             <button
               type="button"
               onClick={() => setShowCompleted((v) => !v)}
-              className="text-xs font-medium text-black/50 hover:text-black/80"
+              className="rounded-full bg-black/[.04] px-3 py-1 text-xs font-medium text-black/50 hover:bg-black/[.07] hover:text-black/80"
             >
               {showCompleted ? "Hide" : "Show"} {completed.length} completed{" "}
               {completed.length === 1 ? "task" : "tasks"}
             </button>
             {showCompleted && (
-              <ul className="mt-2 flex flex-col gap-2">
+              <ul className="mt-1">
                 {completed.map((task) => (
                   <TaskItem
                     key={task.id}
                     task={task}
+                    accent={meta.ink}
                     onToggle={onToggle}
                     onDelete={onDelete}
                     onDragStart={onDragStart}
@@ -124,6 +140,6 @@ export function QuadrantColumn({
           </div>
         )}
       </div>
-    </div>
+    </section>
   );
 }

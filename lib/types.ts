@@ -14,8 +14,10 @@ export interface QuadrantMeta {
   subtitle: string;
   placeholder: string;
   emptyLabel: string;
+  /** Saturated color for the header bar and accent stripe. */
   accent: string;
-  accentSoft: string;
+  /** Darker variant of `accent`, used for icons/borders drawn on a white background. */
+  ink: string;
 }
 
 export const QUADRANTS: QuadrantMeta[] = [
@@ -25,26 +27,26 @@ export const QUADRANTS: QuadrantMeta[] = [
     subtitle: "Urgent & important",
     placeholder: "Add an urgent and important task",
     emptyLabel: "Nothing urgent and important right now.",
-    accent: "#4d7c0f",
-    accentSoft: "#ecf6df",
+    accent: "#8fc42a",
+    ink: "#4f7a0e",
   },
   {
     id: "schedule",
     title: "Schedule",
-    subtitle: "Important, not urgent",
+    subtitle: "Less urgent, but important",
     placeholder: "Add an important task to schedule",
     emptyLabel: "Nothing here — that's allowed.",
-    accent: "#1d4ed8",
-    accentSoft: "#e6edfd",
+    accent: "#4a90e2",
+    ink: "#1f5fa8",
   },
   {
     id: "delegate",
     title: "Delegate",
-    subtitle: "Urgent, not important",
+    subtitle: "Urgent, but less important",
     placeholder: "Add a task to delegate",
     emptyLabel: "Nothing here — that's allowed.",
-    accent: "#c2650a",
-    accentSoft: "#fbead9",
+    accent: "#f9a825",
+    ink: "#a76f00",
   },
   {
     id: "dont-do",
@@ -52,7 +54,7 @@ export const QUADRANTS: QuadrantMeta[] = [
     subtitle: "Neither urgent nor important",
     placeholder: "Add a temptation to ignore",
     emptyLabel: "Nothing here — that's allowed.",
-    accent: "#b91c1c",
-    accentSoft: "#fbe4e2",
+    accent: "#cb1818",
+    ink: "#8a0c0c",
   },
 ];

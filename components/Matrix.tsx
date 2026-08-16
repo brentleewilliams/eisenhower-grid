@@ -19,7 +19,7 @@ export function Matrix() {
   }
 
   return (
-    <div className="grid flex-1 grid-cols-1 gap-4 p-4 sm:grid-cols-2 sm:p-6">
+    <div className="grid flex-1 grid-cols-1 gap-3 p-4 sm:grid-cols-2 sm:gap-[18px] sm:p-6">
       {QUADRANTS.map((meta) => (
         <QuadrantColumn
           key={meta.id}
