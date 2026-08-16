@@ -1,16 +1,21 @@
 "use client";
 
-import { useCallback, useSyncExternalStore } from "react";
+import { doc, getDoc, onSnapshot, setDoc } from "firebase/firestore";
+import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
+import { useAuth } from "./AuthContext";
+import { db } from "./firebase";
 import type { QuadrantId, Task } from "./types";
 
 const STORAGE_KEY = "eisenhower-grid.tasks.v1";
 const EMPTY_TASKS: Task[] = [];
 
-let cache: Task[] = EMPTY_TASKS;
-let cacheLoaded = false;
-const listeners = new Set<() => void>();
+// ---- local (signed-out) store, backed by localStorage ----
 
-function readFromStorage(): Task[] {
+let localCache: Task[] = EMPTY_TASKS;
+let localCacheLoaded = false;
+const localListeners = new Set<() => void>();
+
+function readLocalStorage(): Task[] {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) return [];
@@ -21,76 +26,129 @@ function readFromStorage(): Task[] {
   }
 }
 
-function writeToStorage(tasks: Task[]) {
+function writeLocalStorage(tasks: Task[]) {
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
 }
 
-function getSnapshot(): Task[] {
-  if (!cacheLoaded) {
-    cache = readFromStorage();
-    cacheLoaded = true;
+function getLocalSnapshot(): Task[] {
+  if (!localCacheLoaded) {
+    localCache = readLocalStorage();
+    localCacheLoaded = true;
   }
-  return cache;
+  return localCache;
 }
 
 function getServerSnapshot(): Task[] {
   return EMPTY_TASKS;
 }
 
-function subscribe(callback: () => void) {
-  listeners.add(callback);
+function subscribeLocal(callback: () => void) {
+  localListeners.add(callback);
   const onStorage = (e: StorageEvent) => {
     if (e.key === STORAGE_KEY) {
-      cacheLoaded = false;
+      localCacheLoaded = false;
       callback();
     }
   };
   window.addEventListener("storage", onStorage);
   return () => {
-    listeners.delete(callback);
+    localListeners.delete(callback);
     window.removeEventListener("storage", onStorage);
   };
 }
 
-function mutate(updater: (prev: Task[]) => Task[]) {
-  cache = updater(getSnapshot());
-  cacheLoaded = true;
-  writeToStorage(cache);
-  listeners.forEach((listener) => listener());
+function mutateLocal(updater: (prev: Task[]) => Task[]) {
+  localCache = updater(getLocalSnapshot());
+  localCacheLoaded = true;
+  writeLocalStorage(localCache);
+  localListeners.forEach((listener) => listener());
 }
 
+// ---- combined hook: Firestore when signed in, localStorage otherwise ----
+
 export function useTasks() {
-  const tasks = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
-  const hydrated = tasks !== EMPTY_TASKS;
+  const { user, loading: authLoading } = useAuth();
+  const localTasks = useSyncExternalStore(subscribeLocal, getLocalSnapshot, getServerSnapshot);
 
-  const addTask = useCallback((quadrant: QuadrantId, title: string) => {
-    const trimmed = title.trim();
-    if (!trimmed) return;
-    mutate((prev) => [
-      ...prev,
-      {
-        id: crypto.randomUUID(),
-        title: trimmed,
-        quadrant,
-        completed: false,
-        createdAt: Date.now(),
-      },
-    ]);
-  }, []);
+  const [cloudTasks, setCloudTasks] = useState<Task[] | null>(null);
 
-  const moveTask = useCallback((id: string, quadrant: QuadrantId) => {
-    mutate((prev) => prev.map((t) => (t.id === id ? { ...t, quadrant } : t)));
-  }, []);
+  useEffect(() => {
+    if (!user || !db) return;
+    const ref = doc(db, "users", user.uid);
 
-  const toggleTask = useCallback((id: string) => {
-    mutate((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t))
-    );
-  }, []);
+    getDoc(ref).then((snap) => {
+      if (!snap.exists()) {
+        // First sign-in on this device: seed the cloud doc from whatever is local.
+        setDoc(ref, { tasks: getLocalSnapshot() });
+      }
+    });
 
-  const deleteTask = useCallback((id: string) => {
-    mutate((prev) => prev.filter((t) => t.id !== id));
-  }, []);
+    const unsubscribe = onSnapshot(ref, (snap) => {
+      const data = snap.data();
+      setCloudTasks(Array.isArray(data?.tasks) ? (data.tasks as Task[]) : []);
+    });
 
-  return { tasks, hydrated, addTask, moveTask, toggleTask, deleteTask };
+    return () => {
+      unsubscribe();
+      setCloudTasks(null);
+    };
+  }, [user]);
+
+  const usingCloud = Boolean(user);
+  const tasks = usingCloud ? (cloudTasks ?? []) : localTasks;
+  const hydrated = !authLoading && (usingCloud ? cloudTasks !== null : localTasks !== EMPTY_TASKS);
+
+  const writeTasks = useCallback(
+    (updater: (prev: Task[]) => Task[]) => {
+      if (usingCloud && user && db) {
+        setDoc(doc(db, "users", user.uid), { tasks: updater(cloudTasks ?? []) }, { merge: true });
+      } else {
+        mutateLocal(updater);
+      }
+    },
+    [usingCloud, user, cloudTasks]
+  );
+
+  const addTask = useCallback(
+    (quadrant: QuadrantId, title: string) => {
+      const trimmed = title.trim();
+      if (!trimmed) return;
+      writeTasks((prev) => [
+        ...prev,
+        {
+          id: crypto.randomUUID(),
+          title: trimmed,
+          quadrant,
+          completed: false,
+          createdAt: Date.now(),
+        },
+      ]);
+    },
+    [writeTasks]
+  );
+
+  const moveTask = useCallback(
+    (id: string, quadrant: QuadrantId) => {
+      writeTasks((prev) => prev.map((t) => (t.id === id ? { ...t, quadrant } : t)));
+    },
+    [writeTasks]
+  );
+
+  const toggleTask = useCallback(
+    (id: string) => {
+      writeTasks((prev) =>
+        prev.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t))
+      );
+    },
+    [writeTasks]
+  );
+
+  const deleteTask = useCallback(
+    (id: string) => {
+      writeTasks((prev) => prev.filter((t) => t.id !== id));
+    },
+    [writeTasks]
+  );
+
+  return { tasks, hydrated, syncing: usingCloud, addTask, moveTask, toggleTask, deleteTask };
 }

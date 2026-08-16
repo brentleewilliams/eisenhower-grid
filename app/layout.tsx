@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Arvo, Karla } from "next/font/google";
+import { AuthProvider } from "@/lib/AuthContext";
 import "./globals.css";
 
 const arvo = Arvo({
@@ -24,7 +25,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${arvo.variable} ${karla.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col font-ui">{children}</body>
+      <body className="min-h-full flex flex-col font-ui">
+        <AuthProvider>{children}</AuthProvider>
+      </body>
     </html>
   );
 }

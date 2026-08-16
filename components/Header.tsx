@@ -1,4 +1,5 @@
 import { QUADRANTS } from "@/lib/types";
+import { AuthButton } from "./AuthButton";
 
 const NAV_ITEMS = [
   { label: "Goals", active: false, locked: true },
@@ -61,6 +62,7 @@ export function Header() {
               <LockIcon />
             </span>
           ))}
+          <AuthButton />
         </div>
       </div>
       <div
