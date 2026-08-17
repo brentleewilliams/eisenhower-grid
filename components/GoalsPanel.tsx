@@ -98,7 +98,7 @@ export function GoalsPanel() {
   const goalsById = new Map(goals.map((g) => [g.id, g]));
 
   return (
-    <aside className="flex w-full shrink-0 flex-col overflow-hidden rounded-lg border border-black/[.06] bg-white shadow-sm sm:w-64">
+    <aside className="flex flex-col overflow-hidden rounded-lg border border-black/[.06] bg-white shadow-sm">
       {GOAL_PERIODS.map((meta) => (
         <GoalSection
           key={meta.id}

@@ -12,12 +12,17 @@ prioritization tool. Sort tasks into four quadrants by urgency and importance:
 
 - Add, complete, and delete tasks per quadrant
 - Drag and drop tasks between quadrants
+- Inbox for capturing tasks before triaging them into a quadrant — drag an
+  inbox task onto a quadrant (or back) same as any other task
+- Per-task due date and freeform details, editable inline via each task's
+  "⋮" menu
 - Weekly and monthly goals panel alongside the matrix — drag a monthly goal
   onto a weekly goal to link them as related
 - Sign in with Google to sync tasks and goals across devices (optional —
   works fully offline with `localStorage` if you never sign in)
-- Chat assistant (slide-out panel, bottom-right toggle) that can add, move,
-  complete, and delete tasks and goals on your behalf via natural language
+- Chat assistant (slide-out drawer, right-edge toggle) that can add, move,
+  complete, and delete tasks and goals — including inbox placement, due
+  dates, and details — on your behalf via natural language
 
 ## Stack
 
@@ -68,7 +73,8 @@ you send a message.
 
 The assistant runs on OpenAI's `gpt-5.6-luna` model via the Responses API
 (`app/api/chat/route.ts`), with function tools for adding/moving/completing/
-deleting tasks and goals. Tool calls are executed client-side against the same
+deleting/updating tasks and goals (including inbox placement, due dates, and
+details). Tool calls are executed client-side against the same
 `useTasks`/`useGoals` hooks the rest of the UI uses, so changes sync the same
 way (`localStorage` or Firestore) regardless of whether they came from the UI
 or the chat.

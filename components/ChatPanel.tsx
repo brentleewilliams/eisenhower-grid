@@ -5,15 +5,10 @@ import { useChat } from "@/lib/useChat";
 
 const ACCENT = "#3d3226";
 
-function ChatIcon() {
+function ChevronIcon() {
   return (
-    <svg viewBox="0 0 20 20" width="20" height="20" fill="none">
-      <path
-        d="M4 5.5A1.5 1.5 0 0 1 5.5 4h9A1.5 1.5 0 0 1 16 5.5v6A1.5 1.5 0 0 1 14.5 13H9l-3.2 2.6a.5.5 0 0 1-.8-.4V13h-.5A1.5 1.5 0 0 1 3 11.5v-6Z"
-        stroke="currentColor"
-        strokeWidth="1.4"
-        strokeLinejoin="round"
-      />
+    <svg viewBox="0 0 16 16" width="12" height="12" fill="none">
+      <path d="M10 3 5 8l5 5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -44,24 +39,30 @@ export function ChatPanel() {
 
   return (
     <>
+      {/* Collapsed peek tab — click to open. Hidden while the drawer is open. */}
       {!open && (
         <button
           type="button"
           onClick={() => setOpen(true)}
           aria-label="Open chat"
-          className="fixed bottom-4 right-4 z-40 flex size-12 items-center justify-center rounded-full text-white shadow-lg transition-transform hover:scale-105 sm:right-6"
-          style={{ backgroundColor: ACCENT }}
+          className="fixed right-0 top-1/2 z-40 flex -translate-y-1/2 flex-col items-center gap-2.5 rounded-l-xl border border-r-0 border-black/[.08] bg-white px-2 py-4 text-black/60 shadow-lg transition-transform hover:-translate-x-0.5 hover:text-black/80"
         >
-          <ChatIcon />
+          <ChevronIcon />
+          <span
+            className="font-display text-[11px] font-bold uppercase tracking-wide"
+            style={{ writingMode: "vertical-rl" }}
+          >
+            Assistant
+          </span>
         </button>
       )}
 
-      {/* Backdrop — click to dismiss, mainly useful on narrow viewports where the drawer is full width */}
+      {/* Backdrop — dims the whole app while the drawer is open */}
       <div
         onClick={() => setOpen(false)}
         aria-hidden
         className={
-          "fixed inset-0 z-40 bg-black/20 transition-opacity duration-300 sm:hidden " +
+          "fixed inset-0 z-40 bg-black/30 transition-opacity duration-300 " +
           (open ? "opacity-100" : "pointer-events-none opacity-0")
         }
       />
@@ -71,8 +72,8 @@ export function ChatPanel() {
         aria-label="Assistant chat"
         aria-hidden={!open}
         className={
-          "fixed inset-y-0 right-0 z-50 flex h-dvh w-full max-w-sm flex-col border-l border-black/[.08] bg-white shadow-2xl transition-transform duration-300 ease-in-out " +
-          (open ? "translate-x-0" : "translate-x-full")
+          "fixed inset-y-3 right-3 z-50 flex w-[calc(100vw-1.5rem)] max-w-sm flex-col overflow-hidden rounded-2xl border border-black/[.08] bg-white shadow-2xl transition-transform duration-300 ease-in-out " +
+          (open ? "translate-x-0" : "translate-x-[calc(100%+0.75rem)]")
         }
       >
         <div
@@ -86,9 +87,11 @@ export function ChatPanel() {
             type="button"
             onClick={() => setOpen(false)}
             aria-label="Close chat"
-            className="text-white/70 transition-colors hover:text-white"
+            className="flex size-6 items-center justify-center rounded-full text-white/70 transition-colors hover:bg-white/10 hover:text-white"
           >
-            ✕
+            <span className="rotate-180">
+              <ChevronIcon />
+            </span>
           </button>
         </div>
 

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type OpenAI from "openai";
 import { useTasks } from "./useTasks";
 import { useGoals } from "./useGoals";
-import type { QuadrantId, GoalPeriod } from "./types";
+import type { TaskLocation, GoalPeriod } from "./types";
 
 type InputItem = OpenAI.Responses.ResponseInputItem;
 type OutputItem = OpenAI.Responses.ResponseOutputItem;
@@ -15,7 +15,7 @@ export interface ChatMessage {
   text: string;
 }
 
-const QUADRANT_IDS: QuadrantId[] = ["do-first", "schedule", "delegate", "dont-do"];
+const QUADRANT_IDS: TaskLocation[] = ["do-first", "schedule", "delegate", "dont-do", "inbox"];
 const GOAL_PERIOD_IDS: GoalPeriod[] = ["weekly", "monthly"];
 
 function extractText(item: OutputItem): string | null {
@@ -27,7 +27,7 @@ function extractText(item: OutputItem): string | null {
 }
 
 export function useChat() {
-  const { tasks, addTask, moveTask, toggleTask, deleteTask } = useTasks();
+  const { tasks, addTask, moveTask, toggleTask, deleteTask, updateTask } = useTasks();
   const { goals, addGoal, toggleGoal, deleteGoal } = useGoals();
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -38,9 +38,31 @@ export function useChat() {
   // below always sees the latest value without waiting on a re-render.
   const historyRef = useRef<InputItem[]>([]);
   // Mirror of task/goal state for the tool executor, refreshed each send.
-  const stateRef = useRef({ tasks, addTask, moveTask, toggleTask, deleteTask, goals, addGoal, toggleGoal, deleteGoal });
+  const stateRef = useRef({
+    tasks,
+    addTask,
+    moveTask,
+    toggleTask,
+    deleteTask,
+    updateTask,
+    goals,
+    addGoal,
+    toggleGoal,
+    deleteGoal,
+  });
   useEffect(() => {
-    stateRef.current = { tasks, addTask, moveTask, toggleTask, deleteTask, goals, addGoal, toggleGoal, deleteGoal };
+    stateRef.current = {
+      tasks,
+      addTask,
+      moveTask,
+      toggleTask,
+      deleteTask,
+      updateTask,
+      goals,
+      addGoal,
+      toggleGoal,
+      deleteGoal,
+    };
   });
 
   const runTool = useCallback((name: string, rawArgs: string): unknown => {
@@ -54,16 +76,16 @@ export function useChat() {
 
     switch (name) {
       case "add_task": {
-        const quadrant = args.quadrant as QuadrantId;
+        const quadrant = args.quadrant as TaskLocation;
         const title = String(args.title ?? "");
         if (!QUADRANT_IDS.includes(quadrant)) return { error: "Unknown quadrant" };
         if (!title.trim()) return { error: "Title is required" };
-        s.addTask(quadrant, title);
-        return { ok: true };
+        const id = s.addTask(quadrant, title);
+        return { ok: true, id };
       }
       case "move_task": {
         const id = String(args.id ?? "");
-        const quadrant = args.quadrant as QuadrantId;
+        const quadrant = args.quadrant as TaskLocation;
         if (!s.tasks.some((t) => t.id === id)) return { error: "No task with that id" };
         if (!QUADRANT_IDS.includes(quadrant)) return { error: "Unknown quadrant" };
         s.moveTask(id, quadrant);
@@ -79,6 +101,14 @@ export function useChat() {
         const id = String(args.id ?? "");
         if (!s.tasks.some((t) => t.id === id)) return { error: "No task with that id" };
         s.deleteTask(id);
+        return { ok: true };
+      }
+      case "update_task": {
+        const id = String(args.id ?? "");
+        if (!s.tasks.some((t) => t.id === id)) return { error: "No task with that id" };
+        const dueDate = args.dueDate === null || args.dueDate === undefined ? null : String(args.dueDate);
+        const details = args.details === null || args.details === undefined ? undefined : String(args.details);
+        s.updateTask(id, { dueDate, details });
         return { ok: true };
       }
       case "add_goal": {

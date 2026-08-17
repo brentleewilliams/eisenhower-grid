@@ -1,12 +1,26 @@
 export type QuadrantId = "do-first" | "schedule" | "delegate" | "dont-do";
 
+/** Where a task lives: one of the four quadrants, or uncategorized in the inbox. */
+export type TaskLocation = QuadrantId | "inbox";
+
 export interface Task {
   id: string;
   title: string;
-  quadrant: QuadrantId;
+  quadrant: TaskLocation;
   completed: boolean;
   createdAt: number;
+  /** Freeform notes, added via the inline details expander. */
+  details?: string;
+  /** ISO date string (YYYY-MM-DD), no time component. */
+  dueDate?: string | null;
 }
+
+export const INBOX_META = {
+  id: "inbox" as const,
+  title: "Inbox",
+  placeholder: "Add a task",
+  emptyLabel: "Inbox zero. Capture a task above to prioritize later.",
+};
 
 export type GoalPeriod = "weekly" | "monthly";
 

@@ -87,3 +87,13 @@ passes through untouched and serves the app at its own root.
   plus an explicit "the state JSON is the only source of truth, don't count
   mentions in the transcript" instruction in the system prompt resolved it.
   If tool-calling accuracy regresses again, that's the first thing to check.
+- A tool's result is the *only* thing that makes a claim true — Luna will
+  otherwise describe an action in its reply ("due Friday") without actually
+  having called the tool for it. Two things fix this in practice: (1) tool
+  results must carry enough data to chain further calls (`add_task`'s result
+  includes the new task's `id` so a same-turn `update_task` can target it —
+  originally it didn't, and the model either fabricated a due date or
+  correctly admitted it had no id to update), and (2) the system prompt
+  explicitly says not to describe a change the model didn't call a tool for.
+  When adding a new tool, make sure its result includes whatever a
+  reasonable follow-up call would need.

@@ -12,6 +12,7 @@ interface QuadrantColumnProps {
   onDelete: (id: string) => void;
   onDragStart: (id: string) => void;
   onDrop: () => void;
+  onUpdate: (id: string, patch: Partial<Pick<Task, "details" | "dueDate">>) => void;
 }
 
 export function QuadrantColumn({
@@ -22,6 +23,7 @@ export function QuadrantColumn({
   onDelete,
   onDragStart,
   onDrop,
+  onUpdate,
 }: QuadrantColumnProps) {
   const [draft, setDraft] = useState("");
   const [isDragOver, setIsDragOver] = useState(false);
@@ -46,19 +48,19 @@ export function QuadrantColumn({
         setIsDragOver(false);
         onDrop();
       }}
-      className="relative flex min-h-[280px] flex-col overflow-hidden rounded-lg border border-black/[.06] bg-white pl-1 shadow-sm transition-shadow"
+      className="relative flex min-h-[280px] flex-col rounded-lg border border-black/[.06] bg-white pl-1 shadow-sm transition-shadow"
       style={{
         boxShadow: isDragOver ? `0 0 0 2px ${meta.accent}` : undefined,
       }}
     >
       <div
         aria-hidden
-        className="absolute inset-y-0 left-0 w-1"
+        className="absolute inset-y-0 left-0 w-1 rounded-l-lg"
         style={{ backgroundColor: meta.accent }}
       />
       <div className="flex flex-1 flex-col bg-white">
         <header
-          className="flex min-h-[50px] items-center gap-2.5 px-5 py-3 text-white"
+          className="flex min-h-[50px] items-center gap-2.5 rounded-tr-lg px-5 py-3 text-white"
           style={{ backgroundColor: meta.accent }}
         >
           <h2 className="font-display text-[18px] font-bold leading-[1.2]">
@@ -108,6 +110,7 @@ export function QuadrantColumn({
                 onToggle={onToggle}
                 onDelete={onDelete}
                 onDragStart={onDragStart}
+                onUpdate={onUpdate}
               />
             ))}
           </ul>
@@ -133,6 +136,7 @@ export function QuadrantColumn({
                     onToggle={onToggle}
                     onDelete={onDelete}
                     onDragStart={onDragStart}
+                    onUpdate={onUpdate}
                   />
                 ))}
               </ul>

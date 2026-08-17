@@ -4,7 +4,7 @@ import { doc, getDoc, onSnapshot, setDoc } from "firebase/firestore";
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import { useAuth } from "./AuthContext";
 import { db } from "./firebase";
-import type { QuadrantId, Task } from "./types";
+import type { TaskLocation, Task } from "./types";
 
 const STORAGE_KEY = "eisenhower-grid.tasks.v1";
 const EMPTY_TASKS: Task[] = [];
@@ -110,25 +110,27 @@ export function useTasks() {
   );
 
   const addTask = useCallback(
-    (quadrant: QuadrantId, title: string) => {
+    (quadrant: TaskLocation, title: string) => {
       const trimmed = title.trim();
-      if (!trimmed) return;
+      if (!trimmed) return null;
+      const id = crypto.randomUUID();
       writeTasks((prev) => [
         ...prev,
         {
-          id: crypto.randomUUID(),
+          id,
           title: trimmed,
           quadrant,
           completed: false,
           createdAt: Date.now(),
         },
       ]);
+      return id;
     },
     [writeTasks]
   );
 
   const moveTask = useCallback(
-    (id: string, quadrant: QuadrantId) => {
+    (id: string, quadrant: TaskLocation) => {
       writeTasks((prev) => prev.map((t) => (t.id === id ? { ...t, quadrant } : t)));
     },
     [writeTasks]
@@ -150,5 +152,12 @@ export function useTasks() {
     [writeTasks]
   );
 
-  return { tasks, hydrated, syncing: usingCloud, addTask, moveTask, toggleTask, deleteTask };
+  const updateTask = useCallback(
+    (id: string, patch: Partial<Pick<Task, "details" | "dueDate">>) => {
+      writeTasks((prev) => prev.map((t) => (t.id === id ? { ...t, ...patch } : t)));
+    },
+    [writeTasks]
+  );
+
+  return { tasks, hydrated, syncing: usingCloud, addTask, moveTask, toggleTask, deleteTask, updateTask };
 }
