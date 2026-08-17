@@ -69,6 +69,15 @@ passes through untouched and serves the app at its own root.
   they're absent (e.g. a fresh clone with no `.env.local` yet). These vars
   also need to be set in Vercel's Environment Variables for production,
   and any change there requires a redeploy to take effect.
+- **`setDoc` rejects `undefined` field values, `localStorage` doesn't.** Any
+  code path that writes a `Task`/`Goal` patch — including chat tool
+  handlers — must never produce a literal `undefined` on a field (Firestore
+  throws `Function setDoc() called with invalid data. Unsupported field
+  value: undefined`). Use `null` (for nullable fields like `dueDate`) or
+  `""` (for string fields like `details`) instead. This class of bug is
+  invisible when testing signed-out, since `JSON.stringify` silently drops
+  `undefined` keys — always spot-check a signed-in (Firestore) session
+  after touching task/goal field-patching code.
 
 ## Chat assistant
 

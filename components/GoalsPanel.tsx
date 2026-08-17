@@ -11,7 +11,7 @@ interface GoalSectionProps {
   addGoal: (period: GoalPeriod, title: string) => void;
   toggleGoal: (id: string) => void;
   deleteGoal: (id: string) => void;
-  linkGoal: (id: string, linkedGoalId: string | null) => void;
+  onDropGoalOnGoal: (droppedGoalId: string, targetGoalId: string) => void;
   goalsById: Map<string, Goal>;
   onLinkTask: (taskId: string, goalId: string) => void;
   linkedTasksByGoalId: Map<string, Task[]>;
@@ -23,7 +23,7 @@ function GoalSection({
   addGoal,
   toggleGoal,
   deleteGoal,
-  linkGoal,
+  onDropGoalOnGoal,
   goalsById,
   onLinkTask,
   linkedTasksByGoalId,
@@ -31,9 +31,6 @@ function GoalSection({
   const [draft, setDraft] = useState("");
   const meta = GOAL_PERIODS.find((p) => p.id === period)!;
   const periodGoals = goals.filter((g) => g.period === period);
-  // Only weekly goals can be linked to a monthly goal — monthly is the "larger" unit.
-  const isDropSection = period === "weekly";
-  const isDragSection = period === "monthly";
 
   function submit() {
     addGoal(period, draft);
@@ -45,9 +42,10 @@ function GoalSection({
       <h3 className="font-display px-3 pb-1.5 pt-3 text-[13px] font-bold uppercase tracking-wide text-black/50">
         {meta.title}
       </h3>
-      {isDragSection && periodGoals.length > 0 && (
+      {periodGoals.length > 0 && (
         <p className="font-ui px-3 pb-1.5 text-[11px] italic text-black/35">
-          Drag a goal onto a weekly goal to link them, or drag a task here to link it
+          Drag a weekly and monthly goal onto each other to link them, or drag a task here to
+          link it
         </p>
       )}
 
@@ -82,14 +80,12 @@ function GoalSection({
               goal={goal}
               onToggle={toggleGoal}
               onDelete={deleteGoal}
-              draggable={isDragSection}
-              isDropTarget={isDropSection}
-              onDropGoal={
-                isDropSection ? (draggedMonthlyId) => linkGoal(goal.id, draggedMonthlyId) : undefined
-              }
+              draggable
+              isDropTarget
+              onDropGoal={(droppedGoalId) => onDropGoalOnGoal(droppedGoalId, goal.id)}
               onDropTask={(draggedTaskId) => onLinkTask(draggedTaskId, goal.id)}
               linkedGoal={goal.linkedGoalId ? goalsById.get(goal.linkedGoalId) : undefined}
-              onUnlink={isDropSection ? () => linkGoal(goal.id, null) : undefined}
+              onUnlink={goal.linkedGoalId ? () => onDropGoalOnGoal("", goal.id) : undefined}
               linkedTasks={linkedTasksByGoalId.get(goal.id)}
             />
           ))}
@@ -108,6 +104,24 @@ export function GoalsPanel({ onLinkTask, linkedTasksByGoalId }: GoalsPanelProps)
   const { goals, addGoal, toggleGoal, deleteGoal, linkGoal } = useGoals();
   const goalsById = new Map(goals.map((g) => [g.id, g]));
 
+  // Goal-to-goal linking is always "weekly.linkedGoalId = monthly.id", regardless
+  // of which of the pair was dragged and which was the drop target. Same-period
+  // drops (weekly-onto-weekly, monthly-onto-monthly) are a no-op.
+  function handleGoalDrop(droppedGoalId: string, targetGoalId: string) {
+    const target = goalsById.get(targetGoalId);
+    if (!target) return;
+    if (!droppedGoalId) {
+      // Explicit unlink (see GoalItem's onUnlink, called with an empty id).
+      if (target.period === "weekly") linkGoal(target.id, null);
+      return;
+    }
+    const dropped = goalsById.get(droppedGoalId);
+    if (!dropped || dropped.period === target.period) return;
+    const weekly = dropped.period === "weekly" ? dropped : target;
+    const monthly = dropped.period === "monthly" ? dropped : target;
+    linkGoal(weekly.id, monthly.id);
+  }
+
   return (
     <aside className="flex flex-col overflow-hidden rounded-lg border border-black/[.06] bg-white shadow-sm">
       {GOAL_PERIODS.map((meta) => (
@@ -118,7 +132,7 @@ export function GoalsPanel({ onLinkTask, linkedTasksByGoalId }: GoalsPanelProps)
           addGoal={addGoal}
           toggleGoal={toggleGoal}
           deleteGoal={deleteGoal}
-          linkGoal={linkGoal}
+          onDropGoalOnGoal={handleGoalDrop}
           goalsById={goalsById}
           onLinkTask={onLinkTask}
           linkedTasksByGoalId={linkedTasksByGoalId}

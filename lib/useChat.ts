@@ -107,7 +107,9 @@ export function useChat() {
         const id = String(args.id ?? "");
         if (!s.tasks.some((t) => t.id === id)) return { error: "No task with that id" };
         const dueDate = args.dueDate === null || args.dueDate === undefined ? null : String(args.dueDate);
-        const details = args.details === null || args.details === undefined ? undefined : String(args.details);
+        // Firestore's setDoc rejects `undefined` field values — use "" (falsy,
+        // same as "no details" everywhere else) instead of undefined to clear.
+        const details = args.details === null || args.details === undefined ? "" : String(args.details);
         s.updateTask(id, { dueDate, details });
         return { ok: true };
       }
