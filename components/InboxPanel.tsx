@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { INBOX_META, type Task } from "@/lib/types";
+import { INBOX_META, type Goal, type Task } from "@/lib/types";
 import { TaskItem } from "./TaskItem";
 
 interface InboxPanelProps {
@@ -11,12 +11,22 @@ interface InboxPanelProps {
   onDelete: (id: string) => void;
   onDragStart: (id: string) => void;
   onDrop: () => void;
-  onUpdate: (id: string, patch: Partial<Pick<Task, "details" | "dueDate">>) => void;
+  onUpdate: (id: string, patch: Partial<Pick<Task, "details" | "dueDate" | "linkedGoalId">>) => void;
+  goalsById: Map<string, Goal>;
 }
 
 const ACCENT = "#5c5647";
 
-export function InboxPanel({ tasks, onAdd, onToggle, onDelete, onDragStart, onDrop, onUpdate }: InboxPanelProps) {
+export function InboxPanel({
+  tasks,
+  onAdd,
+  onToggle,
+  onDelete,
+  onDragStart,
+  onDrop,
+  onUpdate,
+  goalsById,
+}: InboxPanelProps) {
   const [draft, setDraft] = useState("");
   const [isDragOver, setIsDragOver] = useState(false);
 
@@ -84,6 +94,7 @@ export function InboxPanel({ tasks, onAdd, onToggle, onDelete, onDragStart, onDr
               onDelete={onDelete}
               onDragStart={onDragStart}
               onUpdate={onUpdate}
+              linkedGoal={task.linkedGoalId ? goalsById.get(task.linkedGoalId) : undefined}
             />
           ))}
         </ul>

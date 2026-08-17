@@ -17,7 +17,8 @@ prioritization tool. Sort tasks into four quadrants by urgency and importance:
 - Per-task due date and freeform details, editable inline via each task's
   "⋮" menu
 - Weekly and monthly goals panel alongside the matrix — drag a monthly goal
-  onto a weekly goal to link them as related
+  onto a weekly goal to link them as related, or drag any task onto a goal
+  to link the task as supporting it
 - Sign in with Google to sync tasks and goals across devices (optional —
   works fully offline with `localStorage` if you never sign in)
 - Chat assistant (slide-out drawer, right-edge toggle) that can add, move,

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { Goal } from "@/lib/types";
+import type { Goal, Task } from "@/lib/types";
 
 interface GoalItemProps {
   goal: Goal;
@@ -12,12 +12,26 @@ interface GoalItemProps {
   /** Weekly items are drop targets for a dragged monthly goal. */
   isDropTarget?: boolean;
   onDropGoal?: (draggedMonthlyId: string) => void;
+  /** Every goal item accepts a dragged task, linking it to this goal. */
+  onDropTask?: (draggedTaskId: string) => void;
   /** The monthly goal this (weekly) goal is linked to, if any. */
   linkedGoal?: Goal;
   onUnlink?: () => void;
+  /** Tasks linked to this goal, if any. */
+  linkedTasks?: Task[];
 }
 
 const ACCENT = "#8a6d1f";
+
+function GripIcon() {
+  return (
+    <svg viewBox="0 0 10 16" width="8" height="14" fill="currentColor">
+      {[2, 8].map((cy) =>
+        [2, 8, 14].map((cx) => <circle key={`${cx}-${cy}`} cx={cx} cy={cy} r="1.3" />)
+      )}
+    </svg>
+  );
+}
 
 export function GoalItem({
   goal,
@@ -26,8 +40,10 @@ export function GoalItem({
   draggable,
   isDropTarget,
   onDropGoal,
+  onDropTask,
   linkedGoal,
   onUnlink,
+  linkedTasks,
 }: GoalItemProps) {
   const [isDragOver, setIsDragOver] = useState(false);
 
@@ -38,36 +54,45 @@ export function GoalItem({
         draggable
           ? (e) => {
               e.dataTransfer.effectAllowed = "link";
-              e.dataTransfer.setData("text/plain", goal.id);
+              e.dataTransfer.setData("application/x-goal-id", goal.id);
             }
           : undefined
       }
-      onDragOver={
-        isDropTarget
-          ? (e) => {
-              e.preventDefault();
-              setIsDragOver(true);
-            }
-          : undefined
-      }
-      onDragLeave={isDropTarget ? () => setIsDragOver(false) : undefined}
-      onDrop={
-        isDropTarget
-          ? (e) => {
-              e.preventDefault();
-              setIsDragOver(false);
-              const draggedId = e.dataTransfer.getData("text/plain");
-              if (draggedId) onDropGoal?.(draggedId);
-            }
-          : undefined
-      }
+      onDragOver={(e) => {
+        const types = e.dataTransfer.types;
+        const acceptsGoal = isDropTarget && types.includes("application/x-goal-id");
+        const acceptsTask = Boolean(onDropTask) && types.includes("application/x-task-id");
+        if (acceptsGoal || acceptsTask) {
+          e.preventDefault();
+          setIsDragOver(true);
+        }
+      }}
+      onDragLeave={() => setIsDragOver(false)}
+      onDrop={(e) => {
+        setIsDragOver(false);
+        const draggedGoalId = e.dataTransfer.getData("application/x-goal-id");
+        const draggedTaskId = e.dataTransfer.getData("application/x-task-id");
+        if (isDropTarget && draggedGoalId) {
+          e.preventDefault();
+          onDropGoal?.(draggedGoalId);
+        } else if (onDropTask && draggedTaskId) {
+          e.preventDefault();
+          onDropTask(draggedTaskId);
+        }
+      }}
       className={
         "font-ui group flex flex-col gap-1 border-b border-black/[.06] bg-white px-3 py-2 text-sm transition-shadow " +
         (draggable ? "cursor-grab active:cursor-grabbing " : "")
       }
       style={isDragOver ? { boxShadow: `inset 0 0 0 2px ${ACCENT}` } : undefined}
     >
-      <div className="flex items-center gap-2.5">
+      <div className="flex items-center gap-2">
+        {draggable && (
+          <span className="text-black/20 group-hover:text-black/40" aria-hidden>
+            <GripIcon />
+          </span>
+        )}
+
         <button
           type="button"
           onClick={() => onToggle(goal.id)}
@@ -112,7 +137,7 @@ export function GoalItem({
       </div>
 
       {linkedGoal && (
-        <div className="ml-[26px] flex items-center gap-1">
+        <div className={"flex items-center gap-1 " + (draggable ? "ml-[22px]" : "ml-[26px]")}>
           <span
             className="font-ui max-w-full truncate rounded-full px-2 py-0.5 text-[10px] font-medium"
             style={{ backgroundColor: `${ACCENT}1a`, color: ACCENT }}
@@ -128,6 +153,20 @@ export function GoalItem({
           >
             ✕
           </button>
+        </div>
+      )}
+
+      {linkedTasks && linkedTasks.length > 0 && (
+        <div className={"flex flex-wrap gap-1 " + (draggable ? "ml-[22px]" : "ml-[26px]")}>
+          {linkedTasks.map((task) => (
+            <span
+              key={task.id}
+              className="font-ui max-w-full truncate rounded-full bg-black/[.05] px-2 py-0.5 text-[10px] font-medium text-black/50"
+              title={`Task: ${task.title}`}
+            >
+              {task.title}
+            </span>
+          ))}
         </div>
       )}
     </li>

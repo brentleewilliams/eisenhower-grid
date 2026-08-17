@@ -13,6 +13,8 @@ export interface Task {
   details?: string;
   /** ISO date string (YYYY-MM-DD), no time component. */
   dueDate?: string | null;
+  /** id of the goal (weekly or monthly) this task supports, if any. */
+  linkedGoalId?: string | null;
 }
 
 export const INBOX_META = {

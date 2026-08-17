@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { GOAL_PERIODS, type Goal, type GoalPeriod } from "@/lib/types";
+import { GOAL_PERIODS, type Goal, type GoalPeriod, type Task } from "@/lib/types";
 import { useGoals } from "@/lib/useGoals";
 import { GoalItem } from "./GoalItem";
 
@@ -13,6 +13,8 @@ interface GoalSectionProps {
   deleteGoal: (id: string) => void;
   linkGoal: (id: string, linkedGoalId: string | null) => void;
   goalsById: Map<string, Goal>;
+  onLinkTask: (taskId: string, goalId: string) => void;
+  linkedTasksByGoalId: Map<string, Task[]>;
 }
 
 function GoalSection({
@@ -23,6 +25,8 @@ function GoalSection({
   deleteGoal,
   linkGoal,
   goalsById,
+  onLinkTask,
+  linkedTasksByGoalId,
 }: GoalSectionProps) {
   const [draft, setDraft] = useState("");
   const meta = GOAL_PERIODS.find((p) => p.id === period)!;
@@ -43,7 +47,7 @@ function GoalSection({
       </h3>
       {isDragSection && periodGoals.length > 0 && (
         <p className="font-ui px-3 pb-1.5 text-[11px] italic text-black/35">
-          Drag a goal onto a weekly goal to link them
+          Drag a goal onto a weekly goal to link them, or drag a task here to link it
         </p>
       )}
 
@@ -83,8 +87,10 @@ function GoalSection({
               onDropGoal={
                 isDropSection ? (draggedMonthlyId) => linkGoal(goal.id, draggedMonthlyId) : undefined
               }
+              onDropTask={(draggedTaskId) => onLinkTask(draggedTaskId, goal.id)}
               linkedGoal={goal.linkedGoalId ? goalsById.get(goal.linkedGoalId) : undefined}
               onUnlink={isDropSection ? () => linkGoal(goal.id, null) : undefined}
+              linkedTasks={linkedTasksByGoalId.get(goal.id)}
             />
           ))}
         </ul>
@@ -93,7 +99,12 @@ function GoalSection({
   );
 }
 
-export function GoalsPanel() {
+interface GoalsPanelProps {
+  onLinkTask: (taskId: string, goalId: string) => void;
+  linkedTasksByGoalId: Map<string, Task[]>;
+}
+
+export function GoalsPanel({ onLinkTask, linkedTasksByGoalId }: GoalsPanelProps) {
   const { goals, addGoal, toggleGoal, deleteGoal, linkGoal } = useGoals();
   const goalsById = new Map(goals.map((g) => [g.id, g]));
 
@@ -109,6 +120,8 @@ export function GoalsPanel() {
           deleteGoal={deleteGoal}
           linkGoal={linkGoal}
           goalsById={goalsById}
+          onLinkTask={onLinkTask}
+          linkedTasksByGoalId={linkedTasksByGoalId}
         />
       ))}
     </aside>

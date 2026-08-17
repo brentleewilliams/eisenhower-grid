@@ -153,7 +153,7 @@ export function useTasks() {
   );
 
   const updateTask = useCallback(
-    (id: string, patch: Partial<Pick<Task, "details" | "dueDate">>) => {
+    (id: string, patch: Partial<Pick<Task, "details" | "dueDate" | "linkedGoalId">>) => {
       writeTasks((prev) => prev.map((t) => (t.id === id ? { ...t, ...patch } : t)));
     },
     [writeTasks]

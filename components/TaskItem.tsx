@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { Task } from "@/lib/types";
+import type { Goal, Task } from "@/lib/types";
 
 interface TaskItemProps {
   task: Task;
@@ -9,7 +9,9 @@ interface TaskItemProps {
   onToggle: (id: string) => void;
   onDelete: (id: string) => void;
   onDragStart: (id: string) => void;
-  onUpdate: (id: string, patch: Partial<Pick<Task, "details" | "dueDate">>) => void;
+  onUpdate: (id: string, patch: Partial<Pick<Task, "details" | "dueDate" | "linkedGoalId">>) => void;
+  /** The goal this task supports, if any. */
+  linkedGoal?: Goal;
 }
 
 function GripIcon() {
@@ -78,7 +80,15 @@ function formatDue(iso: string) {
   return new Date(y, m - 1, d).toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
-export function TaskItem({ task, accent, onToggle, onDelete, onDragStart, onUpdate }: TaskItemProps) {
+export function TaskItem({
+  task,
+  accent,
+  onToggle,
+  onDelete,
+  onDragStart,
+  onUpdate,
+  linkedGoal,
+}: TaskItemProps) {
   const [expanded, setExpanded] = useState(false);
   const [draftDetails, setDraftDetails] = useState(task.details ?? "");
   const [menuOpen, setMenuOpen] = useState(false);
@@ -123,6 +133,7 @@ export function TaskItem({ task, accent, onToggle, onDelete, onDragStart, onUpda
       draggable
       onDragStart={(e) => {
         e.dataTransfer.effectAllowed = "move";
+        e.dataTransfer.setData("application/x-task-id", task.id);
         onDragStart(task.id);
       }}
       className="font-ui group relative flex flex-col gap-1.5 border-b border-black/[.06] bg-white px-5 py-2.5 text-sm cursor-grab active:cursor-grabbing"
@@ -243,6 +254,26 @@ export function TaskItem({ task, accent, onToggle, onDelete, onDragStart, onUpda
           )}
         </div>
       </div>
+
+      {linkedGoal && (
+        <div className="ml-[26px] flex items-center gap-1">
+          <span
+            className="font-ui max-w-full truncate rounded-full px-2 py-0.5 text-[10px] font-medium"
+            style={{ backgroundColor: "#8a6d1f1a", color: "#8a6d1f" }}
+            title={`Supports goal: ${linkedGoal.title}`}
+          >
+            ↳ {linkedGoal.title}
+          </span>
+          <button
+            type="button"
+            onClick={() => onUpdate(task.id, { linkedGoalId: null })}
+            aria-label="Unlink from goal"
+            className="text-black/25 hover:text-black/60 text-[10px]"
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       {expanded && (
         <div className="ml-[26px] flex flex-col gap-1.5">

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { QuadrantMeta, Task } from "@/lib/types";
+import type { Goal, QuadrantMeta, Task } from "@/lib/types";
 import { TaskItem } from "./TaskItem";
 
 interface QuadrantColumnProps {
@@ -12,7 +12,8 @@ interface QuadrantColumnProps {
   onDelete: (id: string) => void;
   onDragStart: (id: string) => void;
   onDrop: () => void;
-  onUpdate: (id: string, patch: Partial<Pick<Task, "details" | "dueDate">>) => void;
+  onUpdate: (id: string, patch: Partial<Pick<Task, "details" | "dueDate" | "linkedGoalId">>) => void;
+  goalsById: Map<string, Goal>;
 }
 
 export function QuadrantColumn({
@@ -24,6 +25,7 @@ export function QuadrantColumn({
   onDragStart,
   onDrop,
   onUpdate,
+  goalsById,
 }: QuadrantColumnProps) {
   const [draft, setDraft] = useState("");
   const [isDragOver, setIsDragOver] = useState(false);
@@ -111,6 +113,7 @@ export function QuadrantColumn({
                 onDelete={onDelete}
                 onDragStart={onDragStart}
                 onUpdate={onUpdate}
+                linkedGoal={task.linkedGoalId ? goalsById.get(task.linkedGoalId) : undefined}
               />
             ))}
           </ul>
@@ -137,6 +140,7 @@ export function QuadrantColumn({
                     onDelete={onDelete}
                     onDragStart={onDragStart}
                     onUpdate={onUpdate}
+                    linkedGoal={task.linkedGoalId ? goalsById.get(task.linkedGoalId) : undefined}
                   />
                 ))}
               </ul>
