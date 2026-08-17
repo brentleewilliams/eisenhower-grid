@@ -144,5 +144,12 @@ export function useGoals() {
     [writeGoals]
   );
 
-  return { goals, hydrated, addGoal, toggleGoal, deleteGoal };
+  const linkGoal = useCallback(
+    (id: string, linkedGoalId: string | null) => {
+      writeGoals((prev) => prev.map((g) => (g.id === id ? { ...g, linkedGoalId } : g)));
+    },
+    [writeGoals]
+  );
+
+  return { goals, hydrated, addGoal, toggleGoal, deleteGoal, linkGoal };
 }

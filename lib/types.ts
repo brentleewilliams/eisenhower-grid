@@ -16,6 +16,8 @@ export interface Goal {
   period: GoalPeriod;
   completed: boolean;
   createdAt: number;
+  /** id of the monthly goal this (weekly) goal supports, if any. */
+  linkedGoalId?: string | null;
 }
 
 export interface GoalPeriodMeta {

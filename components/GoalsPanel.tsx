@@ -11,12 +11,25 @@ interface GoalSectionProps {
   addGoal: (period: GoalPeriod, title: string) => void;
   toggleGoal: (id: string) => void;
   deleteGoal: (id: string) => void;
+  linkGoal: (id: string, linkedGoalId: string | null) => void;
+  goalsById: Map<string, Goal>;
 }
 
-function GoalSection({ period, goals, addGoal, toggleGoal, deleteGoal }: GoalSectionProps) {
+function GoalSection({
+  period,
+  goals,
+  addGoal,
+  toggleGoal,
+  deleteGoal,
+  linkGoal,
+  goalsById,
+}: GoalSectionProps) {
   const [draft, setDraft] = useState("");
   const meta = GOAL_PERIODS.find((p) => p.id === period)!;
   const periodGoals = goals.filter((g) => g.period === period);
+  // Only weekly goals can be linked to a monthly goal — monthly is the "larger" unit.
+  const isDropSection = period === "weekly";
+  const isDragSection = period === "monthly";
 
   function submit() {
     addGoal(period, draft);
@@ -28,6 +41,11 @@ function GoalSection({ period, goals, addGoal, toggleGoal, deleteGoal }: GoalSec
       <h3 className="font-display px-3 pb-1.5 pt-3 text-[13px] font-bold uppercase tracking-wide text-black/50">
         {meta.title}
       </h3>
+      {isDragSection && periodGoals.length > 0 && (
+        <p className="font-ui px-3 pb-1.5 text-[11px] italic text-black/35">
+          Drag a goal onto a weekly goal to link them
+        </p>
+      )}
 
       <label className="flex items-center gap-2 border-b border-black/[.06] px-3 py-2 text-sm text-black/45">
         <span
@@ -55,7 +73,19 @@ function GoalSection({ period, goals, addGoal, toggleGoal, deleteGoal }: GoalSec
       ) : (
         <ul>
           {periodGoals.map((goal) => (
-            <GoalItem key={goal.id} goal={goal} onToggle={toggleGoal} onDelete={deleteGoal} />
+            <GoalItem
+              key={goal.id}
+              goal={goal}
+              onToggle={toggleGoal}
+              onDelete={deleteGoal}
+              draggable={isDragSection}
+              isDropTarget={isDropSection}
+              onDropGoal={
+                isDropSection ? (draggedMonthlyId) => linkGoal(goal.id, draggedMonthlyId) : undefined
+              }
+              linkedGoal={goal.linkedGoalId ? goalsById.get(goal.linkedGoalId) : undefined}
+              onUnlink={isDropSection ? () => linkGoal(goal.id, null) : undefined}
+            />
           ))}
         </ul>
       )}
@@ -64,7 +94,8 @@ function GoalSection({ period, goals, addGoal, toggleGoal, deleteGoal }: GoalSec
 }
 
 export function GoalsPanel() {
-  const { goals, addGoal, toggleGoal, deleteGoal } = useGoals();
+  const { goals, addGoal, toggleGoal, deleteGoal, linkGoal } = useGoals();
+  const goalsById = new Map(goals.map((g) => [g.id, g]));
 
   return (
     <aside className="flex w-full shrink-0 flex-col overflow-hidden rounded-lg border border-black/[.06] bg-white shadow-sm sm:w-64">
@@ -76,6 +107,8 @@ export function GoalsPanel() {
           addGoal={addGoal}
           toggleGoal={toggleGoal}
           deleteGoal={deleteGoal}
+          linkGoal={linkGoal}
+          goalsById={goalsById}
         />
       ))}
     </aside>

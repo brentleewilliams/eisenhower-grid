@@ -12,11 +12,12 @@ prioritization tool. Sort tasks into four quadrants by urgency and importance:
 
 - Add, complete, and delete tasks per quadrant
 - Drag and drop tasks between quadrants
-- Weekly and monthly goals panel alongside the matrix
+- Weekly and monthly goals panel alongside the matrix — drag a monthly goal
+  onto a weekly goal to link them as related
 - Sign in with Google to sync tasks and goals across devices (optional —
   works fully offline with `localStorage` if you never sign in)
-- Chat assistant (bottom-right) that can add, move, complete, and delete
-  tasks and goals on your behalf via natural language
+- Chat assistant (slide-out panel, bottom-right toggle) that can add, move,
+  complete, and delete tasks and goals on your behalf via natural language
 
 ## Stack
 
